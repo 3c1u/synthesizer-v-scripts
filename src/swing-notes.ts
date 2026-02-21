@@ -69,49 +69,41 @@ function main() {
   const swingValue = Number(result.answers['threshold'] as number)
   const timescaleChoice = Number(result.answers['timescale'] as number)
   const timeScaleMultiplier = Math.pow(2, timescaleChoice)
+  const timescale = SV.QUARTER / timeScaleMultiplier
 
   if (result.status !== true) {
     SV.finish()
     return
   }
+  const selection = SV.getMainEditor().getSelection()
+  const selectedNotes = selection.getSelectedNotes()
 
-  const editor = SV.getMainEditor()
-  const track = editor.getCurrentTrack()
-  const numGroups = track.getNumGroups()
+  for (let i = 0; i < selectedNotes.length; i++) {
+    const note = selectedNotes[i]
+    const noteStartTick = note.getOnset()
+    const noteEndTick = note.getEnd()
 
-  for (let i = 0; i < numGroups; i++) {
-    const group = track.getGroupReference(i)
-    const numNotes = group.getTarget().getNumNotes()
+    const nodeStartFrac = noteStartTick % timescale
+    const nodeEndFrac = noteEndTick % timescale
 
-    const timescale = SV.QUARTER / timeScaleMultiplier
+    const noteStartGrid = noteStartTick - nodeStartFrac
+    const noteEndGrid = noteEndTick - nodeEndFrac
 
-    for (let j = 0; j < numNotes; j++) {
-      const note = group.getTarget().getNote(j)
-      const noteStartTick = note.getOnset()
-      const noteEndTick = note.getEnd()
+    const nodeStartFracPerQuarter = nodeStartFrac / timescale
+    const nodeEndFracPerQuarter = nodeEndFrac / timescale
 
-      const nodeStartFrac = noteStartTick % timescale
-      const nodeEndFrac = noteEndTick % timescale
+    const swingedStart = Math.ceil(
+      noteStartGrid +
+        swingTime(nodeStartFracPerQuarter, swingValue) * timescale,
+    )
+    const swingedEnd = Math.floor(
+      noteEndGrid + swingTime(nodeEndFracPerQuarter, swingValue) * timescale,
+    )
 
-      const noteStartGrid = noteStartTick - nodeStartFrac
-      const noteEndGrid = noteEndTick - nodeEndFrac
+    const duration = swingedEnd - swingedStart
 
-      const nodeStartFracPerQuarter = nodeStartFrac / timescale
-      const nodeEndFracPerQuarter = nodeEndFrac / timescale
-
-      const swingedStart = Math.ceil(
-        noteStartGrid +
-          swingTime(nodeStartFracPerQuarter, swingValue) * timescale,
-      )
-      const swingedEnd = Math.floor(
-        noteEndGrid + swingTime(nodeEndFracPerQuarter, swingValue) * timescale,
-      )
-
-      const duration = swingedEnd - swingedStart
-
-      note.setOnset(swingedStart)
-      note.setDuration(duration)
-    }
+    note.setOnset(swingedStart)
+    note.setDuration(duration)
   }
 
   SV.finish()

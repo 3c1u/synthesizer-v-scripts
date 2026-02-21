@@ -65,6 +65,8 @@ declare namespace SV {
   interface MainEditorView extends NestedObject {
     getCurrentGroup(): NoteGroupReference
     getCurrentTrack(): Track
+    getNavigation(): CoordinateSystem
+    getSelection(): TrackInnerSelectionState
   }
 
   type NoteLanguage =
@@ -217,5 +219,77 @@ declare namespace SV {
     setMuted(muted: boolean): void
     setPan(pan: number): void
     setSolo(solo: boolean): void
+  }
+
+  interface CoordinateSystem extends NestedObject {}
+
+  /**
+   * 選択状態の基底インターフェース。
+   * @see https://resource.dreamtonics.com/scripting/ja/SelectionStateBase.html
+   */
+  interface SelectionStateBase extends NestedObject {
+    /** この選択状態が対応しているすべてのオブジェクトタイプについて選択を解除します。選択に変更があった場合は true を返します。 */
+    clearAll(): boolean
+    /** 選択されているものがあるかどうか確認します。 */
+    hasSelectedContent(): boolean
+    /** 選択されたオブジェクトに未完了の編集があるかどうか確認します。 */
+    hasUnfinishedEdits(): boolean
+    registerClearCallback(): void
+    registerSelectionCallback(): void
+  }
+
+  /**
+   * NoteGroupReference の選択を管理するインターフェース。
+   * @see https://resource.dreamtonics.com/scripting/ja/GroupSelection.html
+   */
+  interface GroupSelection extends SelectionStateBase {
+    /** すべての NoteGroupReference の選択を解除します。選択範囲に変更があれば true を返します。 */
+    clearGroups(): boolean
+    /** 選択された NoteGroupReference の配列を選択順に取得します。 */
+    getSelectedGroups(): NoteGroupReference[]
+    /** NoteGroupReference が 1 つ以上選択されているか確認します。 */
+    hasSelectedGroups(): boolean
+    /** 選択に NoteGroupReference を追加します。 */
+    selectGroup(reference: NoteGroupReference): void
+    /** NoteGroupReference の選択を解除します。選択範囲に変更があれば true を返します。 */
+    unselectGroup(reference: NoteGroupReference): boolean
+  }
+
+  /**
+   * ピアノロールの選択状態オブジェクト。
+   * `SV.getMainEditor().getSelection()` で取得します。
+   * @see https://resource.dreamtonics.com/scripting/ja/TrackInnerSelectionState.html
+   */
+  interface TrackInnerSelectionState extends GroupSelection {
+    /** すべてのノートの選択を解除します。選択が変更された場合 true を返します。 */
+    clearNotes(): boolean
+    /** すべてのピッチコントロールの選択を解除します。(2.1.2 からサポート) */
+    clearPitchControls(): boolean
+    /** 選択された Note の配列を選択順に取得します。 */
+    getSelectedNotes(): Note[]
+    /** 選択されたピッチコントロールオブジェクトの配列を取得します。(2.1.2 からサポート) */
+    getSelectedPitchControls(): (PitchControlPoint | PitchControlCurve)[]
+    /** 指定されたパラメータタイプの選択されたオートメーションポイント（Blick 位置）の配列を取得します。 */
+    getSelectedPoints(parameterType: string): number[]
+    /** 選択されている Note が 1 つ以上あるかどうか確認します。 */
+    hasSelectedNotes(): boolean
+    /** 選択されたピッチコントロールオブジェクトがあるかどうか確認します。(2.1.2 からサポート) */
+    hasSelectedPitchControls(): boolean
+    /** Note を選択します。 */
+    selectNote(note: Note): void
+    /** ピッチコントロールオブジェクトを選択します。(2.1.2 からサポート) */
+    selectPitchControls(
+      controls: (PitchControlPoint | PitchControlCurve)[],
+    ): void
+    /** 指定されたパラメータタイプのオートメーションポイントを選択します。 */
+    selectPoints(parameterType: string, positions: number[]): void
+    /** Note の選択を解除します。選択が変更された場合 true を返します。 */
+    unselectNote(note: Note): boolean
+    /** ピッチコントロールオブジェクトの選択を解除します。(2.1.2 からサポート) */
+    unselectPitchControls(
+      controls: (PitchControlPoint | PitchControlCurve)[],
+    ): void
+    /** 指定されたパラメータタイプのオートメーションポイントの選択を解除します。 */
+    unselectPoints(parameterType: string, positions: number[]): void
   }
 }
