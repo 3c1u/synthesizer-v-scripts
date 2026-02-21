@@ -1,0 +1,19 @@
+{
+  "name": "sv-typescript",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "swc src -d dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.1",
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.4",
+    "@swc/cli": "^0.8.0",
+    "@swc/core": "^1.15.11",
+    "typescript": "^5.9.3"
+  }
+}
