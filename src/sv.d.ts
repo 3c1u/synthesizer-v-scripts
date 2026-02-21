@@ -21,7 +21,7 @@ declare namespace SV {
 
   interface CustomDialogWidgetBase {
     readonly name: string
-    readonly type: 'Slider'
+    readonly type: string
   }
 
   interface CustomDialogSlider extends CustomDialogWidgetBase {
@@ -33,7 +33,14 @@ declare namespace SV {
     readonly default: number
   }
 
-  type CustomDialogWidget = CustomDialogSlider
+  interface CustomDialogComboBox extends CustomDialogWidgetBase {
+    readonly type: 'ComboBox'
+    readonly label: string
+    readonly choices: readonly string[]
+    readonly default?: number
+  }
+
+  type CustomDialogWidget = CustomDialogSlider | CustomDialogComboBox
 
   interface CustomDialogResult {
     readonly status: 'Yes' | 'No' | boolean

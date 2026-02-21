@@ -3,10 +3,18 @@ const TRANSLATIONS = {
   'ja-jp': [
     [SCRIPT_TITLE, 'ノートをスイングさせる'],
     ['Swing Value', 'スイング値'],
+    ['Time Scale', 'タイムスケール'],
+    ['1/4 Note', '4分音符'],
+    ['1/8 Note', '8分音符'],
+    ['1/16 Note', '16分音符'],
   ],
   'en-us': [
     [SCRIPT_TITLE, 'Swing Notes'],
     ['Swing Value', 'Swing Value'],
+    ['Time Scale', 'Time Scale'],
+    ['1/4 Note', '1/4 Note'],
+    ['1/8 Note', '1/8 Note'],
+    ['1/16 Note', '1/16 Note'],
   ],
 }
 
@@ -19,7 +27,7 @@ function getClientInfo() {
   }
 }
 
-function getTranslation(langCode: string) {
+function getTranslations(langCode: string) {
   return TRANSLATIONS[langCode] ?? TRANSLATIONS['en-us']
 }
 
@@ -47,11 +55,20 @@ function main() {
         interval: 1,
         default: 50,
       },
+      {
+        name: 'timescale',
+        type: 'ComboBox',
+        label: SV.T('Time Scale'),
+        choices: [SV.T('1/4 Note'), SV.T('1/8 Note'), SV.T('1/16 Note')],
+        default: 1,
+      },
     ],
   } as const
 
   const result = SV.showCustomDialog(myForm)
   const swingValue = Number(result.answers['threshold'] as number)
+  const timescaleChoice = Number(result.answers['timescale'] as number)
+  const timeScaleMultiplier = Math.pow(2, timescaleChoice)
 
   if (result.status !== true) {
     SV.finish()
@@ -66,26 +83,28 @@ function main() {
     const group = track.getGroupReference(i)
     const numNotes = group.getTarget().getNumNotes()
 
+    const timescale = SV.QUARTER / timeScaleMultiplier
+
     for (let j = 0; j < numNotes; j++) {
       const note = group.getTarget().getNote(j)
       const noteStartTick = note.getOnset()
       const noteEndTick = note.getEnd()
 
-      const nodeStartFrac = noteStartTick % SV.QUARTER
-      const nodeEndFrac = noteEndTick % SV.QUARTER
+      const nodeStartFrac = noteStartTick % timescale
+      const nodeEndFrac = noteEndTick % timescale
 
       const noteStartGrid = noteStartTick - nodeStartFrac
       const noteEndGrid = noteEndTick - nodeEndFrac
 
-      const nodeStartFracPerQuarter = nodeStartFrac / SV.QUARTER
-      const nodeEndFracPerQuarter = nodeEndFrac / SV.QUARTER
+      const nodeStartFracPerQuarter = nodeStartFrac / timescale
+      const nodeEndFracPerQuarter = nodeEndFrac / timescale
 
-      const swingedStart = Math.floor(
+      const swingedStart = Math.ceil(
         noteStartGrid +
-          swingTime(nodeStartFracPerQuarter, swingValue) * SV.QUARTER,
+          swingTime(nodeStartFracPerQuarter, swingValue) * timescale,
       )
-      const swingedEnd = Math.ceil(
-        noteEndGrid + swingTime(nodeEndFracPerQuarter, swingValue) * SV.QUARTER,
+      const swingedEnd = Math.floor(
+        noteEndGrid + swingTime(nodeEndFracPerQuarter, swingValue) * timescale,
       )
 
       const duration = swingedEnd - swingedStart
